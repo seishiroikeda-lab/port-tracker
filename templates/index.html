@@ -34,7 +34,7 @@
         </div>
         <div class="logo-text">
           <div class="logo-title">PORT TRACKER</div>
-          <div class="logo-sub">北九州港 入出港検索ツール</div>
+          <div class="logo-sub">北九州港 外航船舶岸壁利用検索</div>
         </div>
       </div>
     </header>
@@ -66,13 +66,8 @@
           </label>
 
           <div class="form-footer">
-            <div class="hint">
-              北九州港湾WEBシステムの公開データを参照します。<br>
-              同じ船名の結果は <strong>1 件のみ</strong> 表示されます（最も早い入出港を優先）。
-            </div>
             <button type="submit" class="btn-primary">
               <span class="btn-label">検索する</span>
-              <span class="btn-sub">今日から 14 日間をまとめて照会</span>
             </button>
           </div>
         </form>
@@ -164,14 +159,7 @@
             </table>
           </div>
 
-          <div class="card-footer">
-            <p>
-              テーブルは横スクロールできます。必要であれば Excel にコピーして二次加工してください。<br>
-              <span style="font-size:10px; color:#6b7280;">
-                ※ 同名の船が複数回入出港している場合でも、最も早いレコードのみ表示しています。
-              </span>
-            </p>
-          </div>
+
         </section>
       {% elif ship_keyword %}
         <!-- 検索済みだがヒットなし -->
@@ -189,10 +177,6 @@
     </main>
 
     <footer class="app-footer">
-      <div class="footer-text">
-        このツールは北九州港湾WEBシステムの公開情報をもとにした
-        <span>非公式ビューア</span>です。実務上の最終確認は公式サイトで行ってください。
-      </div>
     </footer>
   </div>
 </body>

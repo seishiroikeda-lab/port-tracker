@@ -124,13 +124,13 @@
               <thead>
                 <tr>
                   <!-- ※ 日付列は削除 -->
+                   <th>船名</th>
                   <th>岸壁</th>
                   <th>ビット</th>
                   <th>着岸日時</th>
                   <th>離岸日時</th>
                   <th>状態</th>
                   <th>ｺｰﾙｻｲﾝ</th>
-                  <th>船名</th>
                   <th>総ﾄﾝ数(gt)</th>
                   <th>全長(m)</th>
                   <th>船種</th>
@@ -144,13 +144,13 @@
                 {% for r in results %}
                   <tr>
                     <!-- 日付は表示しない -->
+                    <td data-label="船名" class="ship-name-cell">{{ r.ship_name }}</td>
                     <td data-label="岸壁">{{ r.ganpeki }}</td>
                     <td data-label="ビット">{{ r.bit }}</td>
                     <td data-label="着岸日時">{{ r.chakugan }}</td>
                     <td data-label="離岸日時">{{ r.rigan }}</td>
                     <td data-label="状態">{{ r.status }}</td>
                     <td data-label="ｺｰﾙｻｲﾝ">{{ r.callsign }}</td>
-                    <td data-label="船名" class="ship-name-cell">{{ r.ship_name }}</td>
                     <td data-label="総ﾄﾝ数(gt)" class="num">{{ r.gross_ton }}</td>
                     <td data-label="全長(m)" class="num">{{ r.length_m }}</td>
                     <td data-label="船種">{{ r.ship_type }}</td>

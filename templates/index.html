@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>北九州港 入出港検索ツール</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Google Fonts（任意） -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- メインCSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="bg-gradient"></div>
+  <div class="bg-noise"></div>
+
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="logo-block">
+        <div class="logo-mark">
+          <!-- シンプルなロゴ風アイコン -->
+          <svg viewBox="0 0 64 64" aria-hidden="true">
+            <defs>
+              <linearGradient id="grad-logo" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" />
+                <stop offset="100%" />
+              </linearGradient>
+            </defs>
+            <path d="M4 40 L20 24 L36 34 L52 18 L60 24 L36 52 Z" fill="url(#grad-logo)"/>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <div class="logo-title">PORT TRACKER</div>
+          <div class="logo-sub">北九州港 入出港検索ツール</div>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <!-- 検索カード -->
+      <section class="card search-card">
+        <div class="card-header">
+          <h1>船名で入出港を検索</h1>
+          <p>
+            船名を入力すると、
+            <span class="accent">今日から 2 週間</span>
+            の入出港情報をまとめてチェックできます。
+          </p>
+        </div>
+
+        <form method="post" class="search-form">
+          <label class="field">
+            <span class="field-label">船名（部分一致）</span>
+            <div class="field-control">
+              <input
+                type="text"
+                name="ship_name"
+                value="{{ ship_keyword or '' }}"
+                placeholder="例：〇〇丸 / HOGE MARU など"
+                autocomplete="off"
+                required>
+            </div>
+          </label>
+
+          <div class="form-footer">
+            <div class="hint">
+              北九州港湾WEBシステムの公開データを参照します。<br>
+              同じ船名の結果は <strong>1 件のみ</strong> 表示されます（最も早い入出港を優先）。
+            </div>
+            <button type="submit" class="btn-primary">
+              <span class="btn-label">検索する</span>
+              <span class="btn-sub">今日から 14 日間をまとめて照会</span>
+            </button>
+          </div>
+        </form>
+
+        <div class="search-meta">
+          {% if start_date and end_date %}
+            <div class="pill">
+              検索期間：{{ start_date }} 〜 {{ end_date }}
+            </div>
+          {% endif %}
+
+          {% if ship_keyword %}
+            <div class="pill pill-secondary">
+              船名キーワード：<strong>{{ ship_keyword }}</strong>
+            </div>
+          {% elif not (start_date and end_date) %}
+            <div class="pill pill-muted">
+              船名を入力して「検索する」を押すと、今日から 2 週間分の結果がここに表示されます。
+            </div>
+          {% endif %}
+        </div>
+      </section>
+
+      <!-- 結果表示 -->
+      {% if results %}
+        <section class="card results-card">
+          <div class="card-header card-header-inline">
+            <div>
+              <h2>検索結果</h2>
+              <p>
+                {{ results | length }} 隻ヒットしました
+                <span style="font-size:11px; color:#9ca3af;">
+                  （同一船名は 1 行に統合）
+                </span>
+              </p>
+            </div>
+            <div class="result-tags">
+              {% if start_date and end_date %}
+                <span class="tag">期間：{{ start_date }} 〜 {{ end_date }}</span>
+              {% endif %}
+              {% if ship_keyword %}
+                <span class="tag">船名：{{ ship_keyword }}</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="result-table">
+              <thead>
+                <tr>
+                  <!-- ※ 日付列は削除 -->
+                  <th>岸壁</th>
+                  <th>ビット</th>
+                  <th>着岸日時</th>
+                  <th>離岸日時</th>
+                  <th>状態</th>
+                  <th>ｺｰﾙｻｲﾝ</th>
+                  <th>船名</th>
+                  <th>総ﾄﾝ数(gt)</th>
+                  <th>全長(m)</th>
+                  <th>船種</th>
+                  <th>船籍</th>
+                  <th>前港</th>
+                  <th>次港</th>
+                  <th>申請者</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for r in results %}
+                  <tr>
+                    <!-- 日付は表示しない -->
+                    <td data-label="岸壁">{{ r.ganpeki }}</td>
+                    <td data-label="ビット">{{ r.bit }}</td>
+                    <td data-label="着岸日時">{{ r.chakugan }}</td>
+                    <td data-label="離岸日時">{{ r.rigan }}</td>
+                    <td data-label="状態">{{ r.status }}</td>
+                    <td data-label="ｺｰﾙｻｲﾝ">{{ r.callsign }}</td>
+                    <td data-label="船名" class="ship-name-cell">{{ r.ship_name }}</td>
+                    <td data-label="総ﾄﾝ数(gt)" class="num">{{ r.gross_ton }}</td>
+                    <td data-label="全長(m)" class="num">{{ r.length_m }}</td>
+                    <td data-label="船種">{{ r.ship_type }}</td>
+                    <td data-label="船籍">{{ r.flag }}</td>
+                    <td data-label="前港">{{ r.prev_port }}</td>
+                    <td data-label="次港">{{ r.next_port }}</td>
+                    <td data-label="申請者">{{ r.applicant }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card-footer">
+            <p>
+              テーブルは横スクロールできます。必要であれば Excel にコピーして二次加工してください。<br>
+              <span style="font-size:10px; color:#6b7280;">
+                ※ 同名の船が複数回入出港している場合でも、最も早いレコードのみ表示しています。
+              </span>
+            </p>
+          </div>
+        </section>
+      {% elif ship_keyword %}
+        <!-- 検索済みだがヒットなし -->
+        <section class="card empty-card">
+          <div class="empty-state">
+            <div class="empty-icon">⚓</div>
+            <h2>該当する船は見つかりませんでした</h2>
+            <p>
+              船名の表記（全角・半角・スペースなど）を変えて再検索してみてください。<br>
+              検索期間は常に「今日から 2 週間」です。
+            </p>
+          </div>
+        </section>
+      {% endif %}
+    </main>
+
+    <footer class="app-footer">
+      <div class="footer-text">
+        このツールは北九州港湾WEBシステムの公開情報をもとにした
+        <span>非公式ビューア</span>です。実務上の最終確認は公式サイトで行ってください。
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

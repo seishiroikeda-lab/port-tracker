@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from urllib.parse import quote_plus
 
 import requests
 from bs4 import BeautifulSoup
@@ -24,7 +25,7 @@ def fetch_day_records(target_date: datetime):
 
     # User-Agent にツール名と連絡先を明記
     headers = {
-        "User-Agent": "KitaQPortChecker/1.0 (+seishiroikeda@gmail.com)",
+        "User-Agent": "KitaQPortTracker/1.0 (+seishiroikeda@gmail.com)",
         "Referer": BASE_URL,
     }
 
@@ -44,12 +45,10 @@ def parse_records_from_html(html: str, target_date: datetime):
     想定カラム：
       岸壁 / ビット / 着岸日時 / 離岸日時 / 状態 / ｺｰﾙｻｲﾝ /
       船名 / 総ﾄﾝ数(gt) / 全長(m) / 船種 / 船籍 / 前港 / 次港 / 申請者
-    ※ 実際のテーブル構造が違う場合は、この関数内のインデックスを調整する。
     """
     soup = BeautifulSoup(html, "html.parser")
 
     # ページ内で最初に出てくる table をターゲットにする想定
-    # 必要に応じて soup.find_all("table")[n] に変更
     table = soup.find("table")
     if not table:
         return []
@@ -66,7 +65,6 @@ def parse_records_from_html(html: str, target_date: datetime):
 
         values = [c.get_text(strip=True) for c in cols]
 
-        # 必要に応じてインデックス調整
         record = {
             "date": target_date.strftime("%Y-%m-%d"),
             "ganpeki": values[0],      # 岸壁
@@ -106,6 +104,23 @@ def match_ship(ship_name: str, keyword: str) -> bool:
     return k in s
 
 
+def build_mt_search_url(ship_name: str) -> str:
+    """
+    船名から『MarineTraffic の情報を探しやすい Google 検索ページ』の URL を作る。
+
+    直接 MarineTraffic の内部 URL を叩くと
+    'Nothing to sea here' になることが多いので、
+    安全に site:marinetraffic.com で Google 検索させる。
+    """
+    if not ship_name:
+        return "https://www.marinetraffic.com/"
+
+    # Google 検索クエリ: site:marinetraffic.com 船名
+    query = f"site:marinetraffic.com {ship_name}"
+    encoded = quote_plus(query)
+    return f"https://www.google.com/search?q={encoded}"
+
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     results = []
@@ -123,28 +138,31 @@ def index():
             end_date = (base_date + timedelta(days=13)).date()  # 今日含めて14日間
 
             # 今日から 14 日分をループ
+            all_records = []
             for offset in range(14):
                 day = base_date + timedelta(days=offset)
                 day_records = fetch_day_records(day)
-
-                # 船名でフィルタ
                 for rec in day_records:
                     if match_ship(rec["ship_name"], ship_keyword):
-                        results.append(rec)
+                        all_records.append(rec)
 
-            # まず船名 → 日付 → 着岸日時の順でソート
-            results.sort(key=lambda r: (r["ship_name"], r["date"], r["chakugan"]))
+            # 船名 → 日付 → 着岸日時の順でソート
+            all_records.sort(key=lambda r: (r["ship_name"], r["date"], r["chakugan"]))
 
             # 同一船名を 1 件に統合（最も早いレコードだけ残す）
-            unique_results = []
             seen_ships = set()
-
-            for rec in results:
+            unique_results = []
+            for rec in all_records:
                 name = rec["ship_name"]
                 if name in seen_ships:
                     continue
                 seen_ships.add(name)
                 unique_results.append(rec)
+
+            # Google 経由で MarineTraffic を検索するための URL を付与
+            for rec in unique_results:
+                name = (rec.get("ship_name") or "").strip()
+                rec["mt_url"] = build_mt_search_url(name) if name else None
 
             results = unique_results
 
@@ -158,6 +176,4 @@ def index():
 
 
 if __name__ == "__main__":
-    # 開発用サーバー起動
-    # 本番環境では gunicorn 等の WSGI サーバー経由で動かす想定
     app.run(debug=True)

@@ -316,6 +316,34 @@ body {
   }
 }
 
+/* 船名リンクの UX オマケ */
+
+.ship-name-cell a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #7dd3fc;
+  text-decoration: none;
+  padding-bottom: 1px;
+  border-bottom: 1px dashed rgba(125, 211, 252, 0.4);
+  transition:
+    color 0.12s ease-out,
+    border-color 0.12s ease-out,
+    transform 0.08s ease-out;
+}
+
+.ship-name-cell a:hover {
+  color: #e0f2fe;
+  border-color: rgba(125, 211, 252, 0.9);
+  transform: translateY(-0.5px);
+}
+
+.ship-link-icon {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
 /* 空状態 */
 
 .empty-card {

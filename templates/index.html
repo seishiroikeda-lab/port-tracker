@@ -145,7 +145,19 @@
               <tbody>
                 {% for r in results %}
                   <tr>
-                    <td data-label="船名" class="ship-name-cell">{{ r.ship_name }}</td>
+                    <td data-label="船名" class="ship-name-cell">
+                      {% if r.mt_url %}
+                        <a href="{{ r.mt_url }}"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           title="MarineTraffic で {{ r.ship_name }} を検索">
+                          {{ r.ship_name }}
+                          <span class="ship-link-icon">↗</span>
+                        </a>
+                      {% else %}
+                        {{ r.ship_name }}
+                      {% endif %}
+                    </td>
                     <td data-label="岸壁">{{ r.ganpeki }}</td>
                     <td data-label="ビット">{{ r.bit }}</td>
                     <td data-label="着岸日時">{{ r.chakugan }}</td>

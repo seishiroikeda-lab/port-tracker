@@ -14,6 +14,14 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+  <!-- ローディングオーバーレイ -->
+  <div id="loading-overlay" class="loading-overlay" style="display:none;">
+    <div class="loading-box">
+      <div class="spinner"></div>
+      <div class="loading-text">検索中… 少しお待ちください</div>
+    </div>
+  </div>
+
   <div class="bg-gradient"></div>
   <div class="bg-noise"></div>
 
@@ -118,8 +126,7 @@
             <table class="result-table">
               <thead>
                 <tr>
-                  <!-- ※ 日付列は削除 -->
-                   <th>船名</th>
+                  <th>船名</th>
                   <th>岸壁</th>
                   <th>ビット</th>
                   <th>着岸日時</th>
@@ -138,7 +145,6 @@
               <tbody>
                 {% for r in results %}
                   <tr>
-                    <!-- 日付は表示しない -->
                     <td data-label="船名" class="ship-name-cell">{{ r.ship_name }}</td>
                     <td data-label="岸壁">{{ r.ganpeki }}</td>
                     <td data-label="ビット">{{ r.bit }}</td>
@@ -158,8 +164,6 @@
               </tbody>
             </table>
           </div>
-
-
         </section>
       {% elif ship_keyword %}
         <!-- 検索済みだがヒットなし -->
@@ -179,5 +183,18 @@
     <footer class="app-footer">
     </footer>
   </div>
+
+  <!-- ローディングオーバーレイ制御 -->
+  <script>
+    (function () {
+      const form = document.querySelector('.search-form');
+      const overlay = document.getElementById('loading-overlay');
+      if (!form || !overlay) return;
+
+      form.addEventListener('submit', function () {
+        overlay.style.display = 'flex';
+      });
+    })();
+  </script>
 </body>
 </html>

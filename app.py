@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from urllib.parse import quote_plus
 
 import requests
@@ -10,11 +10,15 @@ app = Flask(__name__)
 # 北九州港湾WEBシステムの実URL
 BASE_URL = "http://www.kitaqport.or.jp/HTML1000/PROC2004.asp"
 
+# 日本時間（JST, UTC+9）
+JST = timezone(timedelta(hours=9))
+
 
 def fetch_day_records(target_date: datetime):
     """
     指定した日付で PROC2004.asp に対して POST し、
     その日の入出港データをレコード(list[dict])として返す。
+    target_date は JST を前提とした datetime。
     """
     payload = {
         "kikan_nen1": target_date.strftime("%Y"),  # 年
@@ -132,16 +136,17 @@ def index():
         ship_keyword = request.form.get("ship_name", "").strip()
 
         if ship_keyword:
-            # 今日を基準日とする（サーバのローカルタイム）
-            base_date = datetime.today()
-            start_date = base_date.date()
-            end_date = (base_date + timedelta(days=13)).date()  # 今日含めて14日間
+            # ★ 日本時間（JST）での「今日」を基準にする
+            base_dt = datetime.now(JST)           # タイムゾーン付き datetime
+            base_date = base_dt.date()            # JST での「今日の日付」
+            start_date = base_date
+            end_date = base_date + timedelta(days=13)  # 今日含めて 14 日間
 
-            # 今日から 14 日分をループ
+            # 今日から 14 日分を JST ベースでループ
             all_records = []
             for offset in range(14):
-                day = base_date + timedelta(days=offset)
-                day_records = fetch_day_records(day)
+                day_dt = base_dt + timedelta(days=offset)  # JST の datetime
+                day_records = fetch_day_records(day_dt)
                 for rec in day_records:
                     if match_ship(rec["ship_name"], ship_keyword):
                         all_records.append(rec)
